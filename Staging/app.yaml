@@ -1,0 +1,36 @@
+runtime: python310  # Choose the Python version that matches your app
+service: staging-foodhak-score
+instance_class: F4_1G  # Adjust this based on your needs and traffic
+
+entrypoint: gunicorn -c gunicorn.conf.py -b :$PORT app:app  # Using gunicorn config file for better control
+
+
+env_variables:
+  ENV: 'staging'
+  STAGING_API_KEY: 'mS6WabEO.1Qj6ONyvNvHXkWdbWLFi9mLMgHFVV4m7'
+
+# Optional if VPC connector is needed
+vpc_access_connector:
+  name: projects/central-muse-388319/locations/us-central1/connectors/vpc-access-connector
+
+automatic_scaling:
+  target_cpu_utilization: 0.65  # Increase threshold slightly for better performance under load
+  min_instances: 7  # Keep a minimum of 5 instances to reduce cold starts
+  max_instances: 20  # Increase the max number of instances to handle more traffic
+
+# Health check settings (optional but recommended)
+health_check:
+  enable_health_check: true
+  check_interval_sec: 20  # Frequency of health checks
+  timeout_sec: 8  # Timeout for each health check request
+  healthy_threshold: 3  # Number of successful health checks required to mark the instance as healthy
+  unhealthy_threshold: 5  # Number of failed health checks before marking the instance as unhealthy
+  restart_threshold: 60  # Restart an instance if it's marked as unhealthy for 60 seconds
+
+
+# Increase request timeout if needed (default is 60 seconds)
+handlers:
+- url: /.*
+  script: auto
+  secure: always
+
